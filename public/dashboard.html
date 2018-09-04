@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>SUPERCHAT | Dashboard</title>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="title icon" href="img/logo1.png" />
+		<link rel="stylesheet" type="text/css" href="css/dashboard.css" />
+	</head>
+	<body onload="init()">
+		<div id="header">
+			<img src="img/logobanner1.png" />
+		</div>
+		<div id="container" style="overflow:auto;">
+			<div id="left-body">
+				<div id="frm_pic">
+					<p><b>My Profile</b></p>
+					<img id="image" src="img/avatar.png" alt="Avatar" style="width:120px" />
+				</div>
+				<div id="frm_info">
+					<p class="nn">Nickname:</p>
+					<p id="nickname"></p>
+					<p class="fn">Fullname:</p>
+					<p id="fullname"></p>
+					<p class="ea">E-mail Address:</p>
+					<p id="email"></p>
+				</div>
+				<button id="btn_logout">Logout</button>
+			</div>
+			<div id="center-body">
+				<div id="msg-container">
+					<div id="user_message">
+						<div id="msg-header">
+							<h2>Queen's Kings Superchat App</h2>
+							<p>You are now connected on Superchat App. Enjoy!</p><hr>
+						</div>
+						<div id="msg-content">
+						</div>
+					</div>
+				</div>
+				<div id="sendbox">
+					<textarea name="message" id="message" cols="50" placeholder="Enter message" autofocus /></textarea>
+				</div>
+			</div>
+			<div id="right-body">
+				<div id="right-header">
+					<p>Active users</p>
+				</div>
+				<div id="active_user">
+					<div id="user-content">
+						<p>active user here</p>
+					</div>
+				</div>
+				<div id="footer">
+					<p><b>© 2018 Queen's KINGS | Group 6 Super Chat App</b><br/></p>
+				</div>
+				<button id="btn_Send" onclick="sendMessage()">Send</button>
+			</div>
+		</div>
+		<script>
+			var ws;
+			var user = "";
+			var nickname = localStorage.getItem("nickname");
+			var sessid = localStorage.getItem("sessionid");
+			var fullname = localStorage.getItem("name");
+			var email = localStorage.getItem("email");
+			var div;
+			window.onload = ()=> {
+				var getUrl = document.URL.replace("http://", "ws://");
+				var url = getUrl.replace("#_=_", "");
+				if(url.includes("?")) {
+					var sid = url.split("=")[1].split("&")[0];
+					var nn = url.split("=")[2].split("&")[0];
+					var name = url.split("=")[3].split("&")[0].replace("%20", " ");
+					var em = url.split("=")[4].split("&")[0];
+					localStorage.setItem("sessionid", sid);
+					localStorage.setItem("nickname", nn);
+					localStorage.setItem("name", name);
+					localStorage.setItem("email", em);
+					window.location.href = "/dashboard";
+				}
+				// Logout
+				document.getElementById('btn_logout').onclick = () => {
+					let rq = new XMLHttpRequest();
+					rq.onreadystatechange = function() {
+						if(rq.readyState == 4) {
+							console.log(rq.responseText);
+							if(rq.responseText == "out") {
+								window.location.href = "/";
+								localStorage.removeItem("sessionid");
+								localStorage.removeItem("nickname");
+								localStorage.removeItem("name");
+								localStorage.removeItem("email");
+							}
+						}
+					}
+					rq.open("GET", "/logout?id="+sessid, true);
+					rq.send();
+				}
+
+				ws = new WebSocket(url);
+				ws.onmessage = (evnt) => {
+					div = document.createElement("div");
+					div.innerHTML = evnt.data;
+					document.getElementById('msg-content').appendChild(div);
+				};
+				document.getElementById('nickname').innerHTML = nickname;
+				document.getElementById('fullname').innerHTML = fullname;
+				document.getElementById('email').innerHTML = email;
+			};
+
+			function init() {
+				ws.onopen = (evnt) => {};
+				ws.onclose = (evnt) => {};
+				ws.onerror = (evnt) => {};
+			};
+
+			function sendMessage() {
+				var text = document.getElementById('message').value;
+				var chatbox = JSON.stringify({ user : nickname, chat : text });
+				if(text == "") {
+					alert("type a message..");
+				}
+				else {
+					ws.send(chatbox);
+					text = "";
+				}
+			};
+		</script>
+	</body>
+</html>
